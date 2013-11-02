@@ -78,13 +78,29 @@ package com.finegamedesign.lava
             FlxKongregate.connect();
         }
 
-        /**
-         * Annoyed me.
-         */
         private function loadMap():void
         {
             map = new FlxTilemap();
-            map.loadMap(FlxTilemap.imageToCSV(Map), Tiles);
+            var image:Bitmap = Bitmap(new Map());
+            map.loadMap(FlxTilemap.bitmapToCSV(image.bitmapData), Tiles);
+            var pixels:Vector.<uint> = image.bitmapData.getVector(image.bitmapData.rect);
+            const LAVA:int = 2;
+            const PLAYER:int = 3;
+            const PICKUP:int = 4;
+            const WIDTH:int = 16
+            var tiles:Bitmap = Bitmap(new Tiles());
+            var tilePixels:Vector.<uint> = tiles.bitmapData.getVector(tiles.bitmapData.rect);
+            for (var p:int = pixels.length - 1; 0 < p; p--) {
+                if (tilePixels[LAVA * WIDTH] == pixels[p]) {
+                    map.setTileByIndex(p, LAVA);
+                }
+                else if (tilePixels[PLAYER * WIDTH] == pixels[p]) {
+                    map.setTileByIndex(p, PLAYER);
+                }
+                else if (tilePixels[PICKUP * WIDTH] == pixels[p]) {
+                    map.setTileByIndex(p, PICKUP);
+                }
+            }
             add(map);
         }
 
