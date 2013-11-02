@@ -1,0 +1,26 @@
+TODO
+	See a maze.
+	Press an arrow key to move.
+	Lava flows from a point to adjacent cell.
+	Avoid lava.
+	Save Hawaiian princess.
+	Save prince.
+	Lava Tube
+	finegamedesign.com/lavatube
+	Ask Ian to play.
+	Ask Jen to play.
+
+JOURNAL
+
+Sat 11/02/2013 
+11:10
+
+On theme, lava, love hurts, and be a stranger to fear.
+
+Maze.  On a tile.
+
+Navigate the maze by arrow keys.
+
+http://en.wikipedia.org/wiki/Lava_tube
+
+http://en.wikipedia.org/wiki/Lava_cave
