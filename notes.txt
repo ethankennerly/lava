@@ -1,5 +1,7 @@
 TODO
-	Tweet @VegetableBread #TAGJam4 finegamedesign.com/lava 
+	2013-11-03 Ian Hill expects need to move both.
+	2013-11-03 Ian Hill expects parallel maze.
+	2013-11-03 Ian Hill expects branching maze.
 	Lava explodes player.
 	See walk in 4 directions.
 	Upload to Kongregate

@@ -31,8 +31,11 @@ package com.finegamedesign.lava
         private static const Maze20x15:Class;
         [Embed(source="../../../../gfx/maze40x30.png")]
         private static const Maze40x30:Class;
+        [Embed(source="../../../../gfx/maze40x30_1.png")]
+        private static const Maze40x30_1:Class;
         /**
-         * 2013-11-02 Ian Hill may expect path through center before path around edge.
+         * Swap 20x15 maps 0 and 1.  2013-11-02 Ian Hill may expect path through center before path around edge.
+         * Maze40x30_1 copied with lava near spawn points.  2013-11-02 Ian Hill expects need to move both.
          * http://www.youtube.com/watch?v=mKbeWHey06I&feature=youtu.be
          */
         private static var maps:Array = [MazeMove,
@@ -42,7 +45,8 @@ package com.finegamedesign.lava
                                          Maze20x15_0,
                                          Maze20x15_1,
                                          Maze20x15,
-                                         Maze40x30 ];
+                                         Maze40x30,
+                                         Maze40x30_1 ];
         [Embed(source="../../../../gfx/tiles.png")]
         private static const Tiles:Class;
         [Embed(source="../../../../gfx/palette.png")]
@@ -55,7 +59,8 @@ package com.finegamedesign.lava
             "QUICK!  MEET YOUR PARTNER!\nAVOID RED LAVA!",
             "FOR HIGH SCORE, MEET QUICKLY.",
             "FOR MAX SCORE, MOVE BOTH PARTNERS.",
-            "IMPOSSIBLE? MOVE BOTH PARTNERS." ];
+            "TOO HARD? MOVE BOTH PARTNERS: WASD & ARROWS",
+            "IMPOSSIBLE? MOVE BOTH PARTNERS: WASD & ARROWS" ];
         private static var cheated:Boolean = false;
 
         private var state:String;
