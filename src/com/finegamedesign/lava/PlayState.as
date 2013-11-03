@@ -29,12 +29,16 @@ package com.finegamedesign.lava
         private static const Maze20x15_1:Class;
         [Embed(source="../../../../gfx/maze20x15.png")]
         private static const Maze20x15:Class;
-        private static var maps:Array = [MazeMove, 
+        [Embed(source="../../../../gfx/maze40x30.png")]
+        private static const Maze40x30:Class;
+        private static var maps:Array = [MazeMove,
+                                         // Maze40x30,  // test
                                          MazePath,
                                          MazeLava,
                                          Maze20x15_0,
                                          Maze20x15_1,
-                                         Maze20x15];
+                                         Maze20x15,
+                                         Maze40x30 ];
         [Embed(source="../../../../gfx/tiles.png")]
         private static const Tiles:Class;
         [Embed(source="../../../../gfx/palette.png")]
@@ -45,7 +49,9 @@ package com.finegamedesign.lava
             "PRESS ARROW KEYS OR WASD\nTO MOVE AROUND WALLS",
             "REACH  YOUR PARTNER!\nAVOID RED LAVA!",
             "QUICK! REACH YOUR PARTNER!\nAVOID RED LAVA!",
-            "FOR HIGH SCORE, ARRIVE QUICKLY." ];
+            "FOR HIGH SCORE, ARRIVE QUICKLY.",
+            "FOR MAX SCORE, MOVE BOTH PARTNERS." ];
+        private static var cheated:Boolean = false;
 
         private var state:String;
         private var instructionText:FlxText;
@@ -92,7 +98,7 @@ package com.finegamedesign.lava
             add(player);
             enemies = new FlxGroup();
             add(enemies);
-            addHud();
+            addHud(FlxG.camera.zoom <= 1 ? 0 : 120);
             state = "start";
             first = false;
             
@@ -116,8 +122,8 @@ package com.finegamedesign.lava
             randomlyFlip(image.bitmapData);
             map.loadMap(FlxTilemap.bitmapToCSV(image.bitmapData), Tiles,
                 WIDTH, WIDTH, FlxTilemap.OFF, 0, 0, 1);
+            zoom(map);
             center(map);
-            FlxG.camera.zoom = map.widthInTiles <= 20 ? 2 : 1;
             var pixels:Vector.<uint> = image.bitmapData.getVector(image.bitmapData.rect);
             var palette:Bitmap = Bitmap(new Palette());
             var palettePixels:Vector.<uint> = palette.bitmapData.getVector(palette.bitmapData.rect);
@@ -137,6 +143,16 @@ package com.finegamedesign.lava
                 }
             }
             add(map);
+        }
+
+        private function zoom(map:FlxTilemap, maxWidthInTiles:int=20):void
+        {
+            if (map.widthInTiles <= maxWidthInTiles) {
+                FlxG.camera.zoom = 2;
+            }
+            else {
+                FlxG.camera.zoom = 1;
+            }
         }
 
         private function randomlyFlip(bitmapData:BitmapData):void
@@ -208,7 +224,7 @@ package com.finegamedesign.lava
             }
         }
 
-        private function addHud():void
+        private function addHud(top:int):void
         {
             var titleMessage:String;
             if (0 == FlxG.level) {
@@ -223,7 +239,7 @@ package com.finegamedesign.lava
                 titleMessage = "";
 
             }
-            titleText = new FlxText(0, int(FlxG.height * 0.135), FlxG.width, titleMessage); 
+            titleText = new FlxText(0, top + 32, FlxG.width, titleMessage); 
             titleText.color = textColor;
             titleText.size = 8;
             titleText.scrollFactor.x = 0.0;
@@ -237,18 +253,18 @@ package com.finegamedesign.lava
             else {
                 instructionMessage = nextInstruction();
             }
-            instructionText = new FlxText(0, 0, FlxG.width, instructionMessage);
+            instructionText = new FlxText(0, top, FlxG.width, instructionMessage);
             instructionText.color = textColor;
             instructionText.scrollFactor.x = 0.0;
             instructionText.scrollFactor.y = 0.0;
             instructionText.alignment = "center";
             add(instructionText);
-            scoreText = new FlxText(FlxG.width - 50, 0, 50, "0");
+            scoreText = new FlxText(FlxG.width - 50, top, 50, "0");
             scoreText.color = textColor;
             scoreText.scrollFactor.x = 0.0;
             scoreText.scrollFactor.y = 0.0;
             add(scoreText);
-            highScoreText = new FlxText(10, 0, 50, "HI 0");
+            highScoreText = new FlxText(10, top, 50, "HI 0");
             setHighScoreText();
             highScoreText.color = textColor;
             highScoreText.scrollFactor.x = 0.0;
@@ -316,13 +332,15 @@ package com.finegamedesign.lava
 
         private function collidePlayer(me:FlxObject, you:FlxObject):void
         {
-            FlxG.score += (FlxG.level + 1) * Math.max(1000, (6000 - Math.round(lifeTime) * 100));
+            if (!cheated) {
+                FlxG.score += (FlxG.level + 1) * Math.max(1000, (6000 - Math.round(lifeTime) * 100));
+                FlxKongregate.api.stats.submit("Score", FlxG.score);
+            }
             instructionText.text = "LET'S GET OUT OF HERE!";
             FlxG.play(Sounds.pickup);
-            FlxG.fade(0xFFFFFFFF, 4.0, win);
+            FlxG.fade(0xFFFFFFFF, 2.0, win);
             // FlxG.music.fadeOut(4.0);
             state = "win";
-            FlxKongregate.api.stats.submit("Score", FlxG.score);
         }
 
         private function collideLava(me:FlxObject, you:FlxObject):void
@@ -332,14 +350,9 @@ package com.finegamedesign.lava
                 return;
             }
             var player:FlxSprite = FlxSprite(you);
-            /*
-            var my:FlxPoint = new FlxPoint(tile.x + tile.frameWidth / 2, tile.y + tile.frameHeight / 2);
-            var yours:FlxPoint = new FlxPoint(player.x + player.frameWidth / 2, player.y + player.frameHeight / 2);
-            if (0.5 * (enemy.frameWidth + player.frameWidth) < FlxU.getDistance(my, yours)) {
-                // FlxG.log("collide " + FlxU.getDistance(my, yours).toFixed(2));
+            if (!player.solid) {
                 return;
             }
-            */
             player.hurt(1);
             if (1 <= player.health) {
                 return;
@@ -451,11 +464,17 @@ package com.finegamedesign.lava
                     FlxG.timeScale *= 2.0;
                 }
                 else if (FlxG.keys.justPressed("THREE")) {
+                    cheated = true;
                     FlxG.timeScale *= 0.5;
                 }
                 else if (FlxG.keys.justPressed("NINE")) {
-                    player.health = player.health < 2 ? int.MAX_VALUE : 1;
-                    player.alpha = 0.5 + (player.health < 2 ? 0.5 : 0.0);
+                    cheated = true;
+                    player.solid = !player.solid;
+                    player2.solid = !player2.solid;
+                    player2.health = player2.health <= 1 ? int.MAX_VALUE : 1;
+                    player2.health = player2.health <= 1 ? int.MAX_VALUE : 1;
+                    player.alpha = 0.5 + (player.health <= 1 ? 0.5 : 0.0);
+                    player2.alpha = 0.5 + (player2.health <= 1 ? 0.5 : 0.0);
                 }
             }
         }
