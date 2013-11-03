@@ -36,7 +36,8 @@ package com.finegamedesign.lava
             "PRESS ARROW KEYS OR WASD\nTO REACH  YOUR PARTNER",
             "PRESS ARROW KEYS OR WASD\nTO MOVE AROUND WALLS",
             "REACH  YOUR PARTNER!\nAVOID RED LAVA!",
-            "QUICKLY REACH YOUR PARTNER!\nAVOID RED LAVA!" ];
+            "QUICK! REACH YOUR PARTNER!\nAVOID RED LAVA!",
+            "FOR HIGH SCORE, ARRIVE QUICKLY." ];
 
         private var state:String;
         private var instructionText:FlxText;
@@ -63,10 +64,7 @@ package com.finegamedesign.lava
             else {
                 FlxG.scores.push(FlxG.score);
             }
-            if (9 <= FlxG.score) {
-                FlxG.score = 2;
-            }
-            else {
+            if (FlxG.level <= 0) {
                 FlxG.score = 0;
             }
         }
@@ -203,12 +201,12 @@ package com.finegamedesign.lava
             instructionText.scrollFactor.y = 0.0;
             instructionText.alignment = "center";
             add(instructionText);
-            scoreText = new FlxText(FlxG.width - 30, 0, 30, "0");
+            scoreText = new FlxText(FlxG.width - 50, 0, 50, "0");
             scoreText.color = textColor;
             scoreText.scrollFactor.x = 0.0;
             scoreText.scrollFactor.y = 0.0;
             add(scoreText);
-            highScoreText = new FlxText(10, 0, 30, "HI 0");
+            highScoreText = new FlxText(10, 0, 50, "HI 0");
             setHighScoreText();
             highScoreText.color = textColor;
             highScoreText.scrollFactor.x = 0.0;
@@ -228,6 +226,7 @@ package com.finegamedesign.lava
 
         override public function update():void 
         {
+            lifeTime += FlxG.elapsed;
             updateInput();
             if ("start" == state 
                     && ((player.velocity.x != 0.0 || player.velocity.y != 0.0)
@@ -275,6 +274,7 @@ package com.finegamedesign.lava
 
         private function collidePlayer(me:FlxObject, you:FlxObject):void
         {
+            FlxG.score += (FlxG.level + 1) * (6000 - Math.round(lifeTime) * 100);
             instructionText.text = "LET'S GET OUT OF HERE!";
             FlxG.fade(0xFFFFFFFF, 4.0, win);
             // FlxG.music.fadeOut(4.0);
