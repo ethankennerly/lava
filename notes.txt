@@ -1,9 +1,7 @@
 TODO
-	Ask Ian to play.
+	Tweet @VegetableBread #TAGJam4 finegamedesign.com/lava 
 	Lava explodes player.
 	See walk in 4 directions.
-	40 by 30 maze.  Zoom x1.
-	Tweet @VegetableBread #TAGJam4 finegamedesign.com/lava 
 	Upload to Kongregate
 	See tunnel texture.
 	Edge tunnel and lava.
@@ -30,3 +28,6 @@ http://coreybechelli.wordpress.com/tag/maze/
 http://www.astrolog.org/labyrnth/algrithm.htm
 
 http://www.dollins.org/mazes/
+
+Lava Maze in Indiana Jones and The Fate of Atlantis
+http://www.youtube.com/watch?v=I1WJXOl08-c

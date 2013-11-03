@@ -31,6 +31,10 @@ package com.finegamedesign.lava
         private static const Maze20x15:Class;
         [Embed(source="../../../../gfx/maze40x30.png")]
         private static const Maze40x30:Class;
+        /**
+         * 2013-11-02 Ian Hill may expect path through center before path around edge.
+         * http://www.youtube.com/watch?v=mKbeWHey06I&feature=youtu.be
+         */
         private static var maps:Array = [MazeMove,
                                          // Maze40x30,  // test
                                          MazePath,
@@ -66,6 +70,7 @@ package com.finegamedesign.lava
         private var map:FlxTilemap;
         private var expandLavaElapsed:Number;
         private var expandLavaTime:Number = 1.0;
+        private var started:Boolean;
 
         private function createScores():void
         {
@@ -100,7 +105,8 @@ package com.finegamedesign.lava
             enemies = new FlxGroup();
             add(enemies);
             addHud(FlxG.camera.zoom <= 1 ? 0 : 120);
-            state = "start";
+            state = "play";
+            started = false;
             first = false;
             
             // After stage is setup, connect to Kongregate.
@@ -232,7 +238,7 @@ package com.finegamedesign.lava
                 titleMessage = "LAVA  MAZE" 
                     + "\nFor  one or two players"
                     + "\n\n\n\n\n\n\n\n\n\n\n\n\n\nOne-day game by Ethan Kennerly"
-                    + "\n" // + "Playtesting by Ian Hill"
+                    + "\nPlaytesting by Ian Hill, Jennifer Russ"
                     + "\n\nFor The Arbitrary Game Jam #4  on November 2, 2013."
                     + "\nTAG4 themes:  Lava & Love hurts & Be a stranger to fear";
             }
@@ -260,12 +266,12 @@ package com.finegamedesign.lava
             instructionText.scrollFactor.y = 0.0;
             instructionText.alignment = "center";
             add(instructionText);
-            scoreText = new FlxText(FlxG.width - margin - 50, margin, 50, "0");
+            scoreText = new FlxText(FlxG.width - margin - 100, margin, 50, "0");
             scoreText.color = textColor;
             scoreText.scrollFactor.x = 0.0;
             scoreText.scrollFactor.y = 0.0;
             add(scoreText);
-            highScoreText = new FlxText(50 + margin, margin, 50, "HI 0");
+            highScoreText = new FlxText(50 + margin, margin, 100, "HI 0");
             setHighScoreText();
             highScoreText.color = textColor;
             highScoreText.scrollFactor.x = 0.0;
@@ -287,11 +293,10 @@ package com.finegamedesign.lava
         {
             lifeTime += FlxG.elapsed;
             updateInput();
-            if ("start" == state 
+            if (!started
                     && ((player.velocity.x != 0.0 || player.velocity.y != 0.0)
                     || (player2.velocity.x != 0.0 || player2.velocity.y != 0.0)))
             {
-                state = "play";
                 instructionText.text = nextInstruction();
                 titleText.text = "";
             }
@@ -344,10 +349,14 @@ package com.finegamedesign.lava
             state = "win";
         }
 
+        /**
+         * TODO: Do not move. Lava enters tile. Ian Hill expects game over.
+         * http://www.youtube.com/watch?v=mKbeWHey06I
+         */
         private function collideLava(me:FlxObject, you:FlxObject):void
         {
             var tile:FlxTile = FlxTile(me);
-            if (tile.index != LAVA || state != "play") {
+            if (tile.index != LAVA || (state != "play")) {
                 return;
             }
             var player:FlxSprite = FlxSprite(you);
