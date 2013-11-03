@@ -45,12 +45,13 @@ package com.finegamedesign.lava
         private static const Palette:Class;
         private static var textColor:uint = 0xFFFFFF;
         private static var messages:Array = [
-            "PRESS ARROW KEYS OR WASD\nTO REACH  YOUR PARTNER",
+            "PRESS ARROW KEYS OR WASD\nTO MEET YOUR PARTNER",
             "PRESS ARROW KEYS OR WASD\nTO MOVE AROUND WALLS",
-            "REACH  YOUR PARTNER!\nAVOID RED LAVA!",
-            "QUICK! REACH YOUR PARTNER!\nAVOID RED LAVA!",
-            "FOR HIGH SCORE, ARRIVE QUICKLY.",
-            "FOR MAX SCORE, MOVE BOTH PARTNERS." ];
+            "MEET YOUR PARTNER!\nAVOID RED LAVA!",
+            "QUICK!  MEET YOUR PARTNER!\nAVOID RED LAVA!",
+            "FOR HIGH SCORE, MEET QUICKLY.",
+            "FOR MAX SCORE, MOVE BOTH PARTNERS.",
+            "IMPOSSIBLE? MOVE BOTH PARTNERS." ];
         private static var cheated:Boolean = false;
 
         private var state:String;
@@ -224,7 +225,7 @@ package com.finegamedesign.lava
             }
         }
 
-        private function addHud(top:int):void
+        private function addHud(margin:int):void
         {
             var titleMessage:String;
             if (0 == FlxG.level) {
@@ -239,7 +240,7 @@ package com.finegamedesign.lava
                 titleMessage = "";
 
             }
-            titleText = new FlxText(0, top + 32, FlxG.width, titleMessage); 
+            titleText = new FlxText(0, margin + 32, FlxG.width, titleMessage); 
             titleText.color = textColor;
             titleText.size = 8;
             titleText.scrollFactor.x = 0.0;
@@ -253,18 +254,18 @@ package com.finegamedesign.lava
             else {
                 instructionMessage = nextInstruction();
             }
-            instructionText = new FlxText(0, top, FlxG.width, instructionMessage);
+            instructionText = new FlxText(0, margin, FlxG.width, instructionMessage);
             instructionText.color = textColor;
             instructionText.scrollFactor.x = 0.0;
             instructionText.scrollFactor.y = 0.0;
             instructionText.alignment = "center";
             add(instructionText);
-            scoreText = new FlxText(FlxG.width - 50, top, 50, "0");
+            scoreText = new FlxText(FlxG.width - margin - 50, margin, 50, "0");
             scoreText.color = textColor;
             scoreText.scrollFactor.x = 0.0;
             scoreText.scrollFactor.y = 0.0;
             add(scoreText);
-            highScoreText = new FlxText(10, top, 50, "HI 0");
+            highScoreText = new FlxText(50 + margin, margin, 50, "HI 0");
             setHighScoreText();
             highScoreText.color = textColor;
             highScoreText.scrollFactor.x = 0.0;
