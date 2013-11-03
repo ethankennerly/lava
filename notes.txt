@@ -1,14 +1,12 @@
 TODO
-	See a maze.
-	Press an arrow key to move.
-	Lava flows from a point to adjacent cell.
 	Avoid lava.
-	Save Hawaiian princess.
-	Save prince.
-	Lava Tube
-	finegamedesign.com/lavatube
+	3 maps
+	finegamedesign.com/lava
 	Ask Ian to play.
 	Ask Jen to play.
+	Hear
+	Lava explodes player.
+	See walk in 4 directions.
 
 JOURNAL
 

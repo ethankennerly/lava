@@ -13,7 +13,7 @@ package com.finegamedesign.lava
         private static const WALL:int = 1;
         private static const LAVA:int = 2;
         private static const PLAYER:int = 3;
-        private static const PICKUP:int = 4;
+        private static const PLAYER2:int = 4;
         private static const WIDTH:int = 16
         private static var first:Boolean = true;
         [Embed(source="../../../../gfx/maze20x15.png")]
@@ -30,6 +30,7 @@ package com.finegamedesign.lava
         private var scoreText:FlxText;
         private var highScoreText:FlxText;
         private var player:Player;
+        private var player2:Player2;
         private var lifeTime:Number;
         private var enemies:FlxGroup;
         private var map:FlxTilemap;
@@ -63,6 +64,7 @@ package com.finegamedesign.lava
             expandLavaElapsed = 0.0;
             createScores();
             loadMap();
+            add(player2);
             add(player);
             enemies = new FlxGroup();
             add(enemies);
@@ -96,18 +98,25 @@ package com.finegamedesign.lava
                     map.setTileByIndex(p, LAVA);
                 }
                 else if (palettePixels[PLAYER] == pixels[p]) {
-                    map.setTileByIndex(p, PLAYER);
-                    player = new Player(
-                        WIDTH * int(p / map.widthInTiles), 
-                        WIDTH * (p % map.widthInTiles));
-                    player.y += player.frameHeight / 2;
-                    player.x += player.frameWidth / 2;
+                    // map.setTileByIndex(p, PLAYER);
+                    player = new Player();
+                    placePlayer(player, p);
                 }
-                else if (palettePixels[PICKUP] == pixels[p]) {
-                    map.setTileByIndex(p, PICKUP);
+                else if (palettePixels[PLAYER2] == pixels[p]) {
+                    // map.setTileByIndex(p, PLAYER2);
+                    player2 = new Player2();
+                    placePlayer(player2, p);
                 }
             }
             add(map);
+        }
+
+        private function placePlayer(player:Player, p:int):void
+        {
+            player.y = WIDTH * int(p / map.widthInTiles)
+                + player.frameHeight / 2;
+            player.x = WIDTH * (p % map.widthInTiles)
+                + player.frameWidth / 2;
         }
 
         private function expandLava():void
@@ -154,7 +163,7 @@ package com.finegamedesign.lava
             add(titleText);
             instructionText = new FlxText(0, 0, FlxG.width, 
                 first ? "CLICK HERE"
-                      : "PRESS ARROW KEYS\nTO RESCUE PRINCESS");
+                      : "PRESS ARROW KEYS\nTO REACH PARTNER");
             instructionText.color = textColor;
             instructionText.scrollFactor.x = 0.0;
             instructionText.scrollFactor.y = 0.0;
@@ -175,13 +184,15 @@ package com.finegamedesign.lava
 
         override public function update():void 
         {
-            if ("lose" != state) {
+            if ("lose" != state && "win" != state) {
                 updateInput();
             }
-            if ("start" == state && (player.velocity.x != 0.0 || player.velocity.y != 0.0))
+            if ("start" == state 
+                    && ((player.velocity.x != 0.0 || player.velocity.y != 0.0)
+                    || (player2.velocity.x != 0.0 || player2.velocity.y != 0.0)))
             {
-                state = "pickup";
-                instructionText.text = "PRESS ARROW KEYS\nTO RESCUE PRINCESS";
+                state = "play";
+                instructionText.text = "PRESS ARROW KEYS\nTO REACH PARTNER";
                 titleText.text = "";
             }
             expandLavaElapsed += FlxG.elapsed;
@@ -191,7 +202,8 @@ package com.finegamedesign.lava
             }
             if ("play" == state) {
                 FlxG.collide(player, map);
-                FlxG.overlap(player, enemies, collide);
+                FlxG.collide(player2, map);
+                FlxG.overlap(player, player2, collidePlayer);
             }
             updateHud();
             super.update();
@@ -217,7 +229,16 @@ package com.finegamedesign.lava
             highScoreText.text = "HI " + highScore;
         }
 
-        private function collide(me:FlxObject, you:FlxObject):void
+        private function collidePlayer(me:FlxObject, you:FlxObject):void
+        {
+            instructionText.text = "LET'S GET OUT OF HERE!";
+            FlxG.fade(0xFFFFFFFF, 4.0, win);
+            // FlxG.music.fadeOut(4.0);
+            state = "win";
+            FlxKongregate.api.stats.submit("Score", FlxG.score);
+        }
+
+        private function collideLava(me:FlxObject, you:FlxObject):void
         {
             var enemy:FlxSprite = FlxSprite(you);
             var player:Player = Player(me);
@@ -240,14 +261,20 @@ package com.finegamedesign.lava
             FlxG.camera.shake(0.05, 0.5, null, false, FlxCamera.SHAKE_HORIZONTAL_ONLY);
             instructionText.text = "AA!  LAVA!";
             FlxG.fade(0xFF000000, 4.0, lose);
-            FlxG.music.fadeOut(4.0);
+            // FlxG.music.fadeOut(4.0);
             state = "lose";
             FlxKongregate.api.stats.submit("Score", FlxG.score);
         }
 
         private function lose():void
         {
-            FlxG.playMusic(Sounds.music, 0.0);
+            // FlxG.playMusic(Sounds.music, 0.0);
+            FlxG.resetState();
+        }
+
+        private function win():void
+        {
+            // FlxG.playMusic(Sounds.music, 0.0);
             FlxG.resetState();
         }
 
@@ -260,10 +287,11 @@ package com.finegamedesign.lava
         {
             if (FlxG.mouse.justPressed()) {
                 titleText.text = "";
-                instructionText.text = "PRESS ARROW KEYS\nTO RESCUE PRINCESS";
+                instructionText.text = "PRESS ARROW KEYS\nTO REACH PARTNER";
                 FlxG.play(Sounds.start);
             }
             mayMovePlayer();
+            mayMovePlayer2();
             mayCheat();
         }
 
@@ -271,20 +299,40 @@ package com.finegamedesign.lava
         {
             player.velocity.x = 0;
             player.velocity.y = 0;
-            if (FlxG.keys.pressed("LEFT") || FlxG.keys.pressed("A")) {
+            if (FlxG.keys.pressed("A")) {
                 player.velocity.x -= player.speed;
             }
-            if (FlxG.keys.pressed("RIGHT") || FlxG.keys.pressed("D")) {
+            if (FlxG.keys.pressed("D")) {
                 player.velocity.x += player.speed;
             }
-            if (FlxG.keys.pressed("UP") || FlxG.keys.pressed("W")) {
+            if (FlxG.keys.pressed("W")) {
                 player.velocity.y -= player.speed;
             }
-            if (FlxG.keys.pressed("DOWN") || FlxG.keys.pressed("S")) {
+            if (FlxG.keys.pressed("S")) {
                 player.velocity.y += player.speed;
             }
             player.x = Math.max(player.frameWidth / 2, Math.min(FlxG.width - player.frameWidth, player.x));
             player.y = Math.max(player.frameHeight / 2, Math.min(FlxG.height - player.frameHeight, player.y));
+        }
+
+        private function mayMovePlayer2():void
+        {
+            player2.velocity.x = 0;
+            player2.velocity.y = 0;
+            if (FlxG.keys.pressed("LEFT")) {
+                player2.velocity.x -= player2.speed;
+            }
+            if (FlxG.keys.pressed("RIGHT")) {
+                player2.velocity.x += player2.speed;
+            }
+            if (FlxG.keys.pressed("UP")) {
+                player2.velocity.y -= player2.speed;
+            }
+            if (FlxG.keys.pressed("DOWN")) {
+                player2.velocity.y += player2.speed;
+            }
+            player2.x = Math.max(player2.frameWidth / 2, Math.min(FlxG.width - player2.frameWidth, player2.x));
+            player2.y = Math.max(player2.frameHeight / 2, Math.min(FlxG.height - player2.frameHeight, player2.y));
         }
 
         private function mayCheat():void
@@ -292,8 +340,8 @@ package com.finegamedesign.lava
             if (FlxG.keys.pressed("SHIFT")) {
                 if (FlxG.keys.justPressed("ONE")) {
                     if (FlxG.timeScale != 1.0) {
-                        FlxG.music.pause();
-                        FlxG.music.resume(1000.0 * lifeTime);
+                        // FlxG.music.pause();
+                        // FlxG.music.resume(1000.0 * lifeTime);
                         // FlxG.log("resume " + FlxG.music.channel.position);
                         FlxG.timeScale = 1.0;
                     }

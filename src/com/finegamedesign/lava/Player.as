@@ -4,13 +4,16 @@ package com.finegamedesign.lava
 
     public class Player extends FlxSprite
     {
-        [Embed(source="../../../../gfx/player.png")] internal static var Img:Class;
+        [Embed(source="../../../../gfx/player.png")] internal static var PlayerImg:Class;
         internal var speed:Number = 60;
                                     // 160;
 
         public function Player(X:int = 0, Y:int = 0, ImgClass:Class = null) 
         {
-            super(X, Y, Img);
+            if (null == ImgClass) {
+                ImgClass = PlayerImg;
+            }
+            super(X, Y, ImgClass);
             width = 1.0 * frameWidth;
             height = 1.0 * frameHeight;
             offset.x = 0.5 * (frameWidth - width);
