@@ -1,7 +1,12 @@
 TODO
-	Avoid lava.
-	3 maps
+	If any player collides with lava, lose.
+	tutor move.
+	tutor lava.
+	easy map
+	medium map
+	hard map
 	finegamedesign.com/lava
+	Score per second. Bonus if win quickly.
 	Ask Ian to play.
 	Ask Jen to play.
 	Hear

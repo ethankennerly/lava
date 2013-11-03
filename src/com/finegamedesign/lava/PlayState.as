@@ -1,11 +1,10 @@
 package com.finegamedesign.lava
 {
     import flash.display.Bitmap;
-    import flash.geom.Rectangle;
-    import flash.utils.Dictionary;
 
     import org.flixel.*;
     import org.flixel.plugin.photonstorm.API.FlxKongregate;
+    import org.flixel.system.FlxTile;
    
     public class PlayState extends FlxState
     {
@@ -23,6 +22,7 @@ package com.finegamedesign.lava
         [Embed(source="../../../../gfx/palette.png")]
         private static const Palette:Class;
         private static var textColor:uint = 0xFFFFFF;
+        private static var moveString:String = "PRESS ARROW KEYS OR WASD\nTO REACH PARTNER";
 
         private var state:String;
         private var instructionText:FlxText;
@@ -154,7 +154,8 @@ package com.finegamedesign.lava
         {
             titleText = new FlxText(0, int(FlxG.height * 0.25), FlxG.width, 
                 "LAVA MAZE" 
-                + "\nGame  by Ethan Kennerly\nPlaytesting by Ian Hill");
+                + "\nGame  by Ethan Kennerly"
+                + "\nPlaytesting by Ian Hill");
             titleText.color = textColor;
             titleText.size = 8;
             titleText.scrollFactor.x = 0.0;
@@ -163,7 +164,7 @@ package com.finegamedesign.lava
             add(titleText);
             instructionText = new FlxText(0, 0, FlxG.width, 
                 first ? "CLICK HERE"
-                      : "PRESS ARROW KEYS\nTO REACH PARTNER");
+                      : moveString);
             instructionText.color = textColor;
             instructionText.scrollFactor.x = 0.0;
             instructionText.scrollFactor.y = 0.0;
@@ -187,12 +188,18 @@ package com.finegamedesign.lava
             if ("lose" != state && "win" != state) {
                 updateInput();
             }
+            else {
+                player.velocity.x = 0.0;
+                player.velocity.x = 0.0;
+                player2.velocity.y = 0.0;
+                player2.velocity.y = 0.0;
+            }
             if ("start" == state 
                     && ((player.velocity.x != 0.0 || player.velocity.y != 0.0)
                     || (player2.velocity.x != 0.0 || player2.velocity.y != 0.0)))
             {
                 state = "play";
-                instructionText.text = "PRESS ARROW KEYS\nTO REACH PARTNER";
+                instructionText.text = moveString;
                 titleText.text = "";
             }
             expandLavaElapsed += FlxG.elapsed;
@@ -204,6 +211,8 @@ package com.finegamedesign.lava
                 FlxG.collide(player, map);
                 FlxG.collide(player2, map);
                 FlxG.overlap(player, player2, collidePlayer);
+                map.overlapsWithCallback(player, collideLava);
+                map.overlapsWithCallback(player2, collideLava);
             }
             updateHud();
             super.update();
@@ -240,16 +249,21 @@ package com.finegamedesign.lava
 
         private function collideLava(me:FlxObject, you:FlxObject):void
         {
-            var enemy:FlxSprite = FlxSprite(you);
-            var player:Player = Player(me);
-            var my:FlxPoint = new FlxPoint(player.x + player.frameWidth / 2, player.y + player.frameHeight / 2);
-            var yours:FlxPoint = new FlxPoint(enemy.x + enemy.frameWidth / 2, enemy.y + enemy.frameHeight / 2);
+            var tile:FlxTile = FlxTile(me);
+            if (tile.index != LAVA || state != "play") {
+                return;
+            }
+            var player:FlxSprite = FlxSprite(you);
+            /*
+            var my:FlxPoint = new FlxPoint(tile.x + tile.frameWidth / 2, tile.y + tile.frameHeight / 2);
+            var yours:FlxPoint = new FlxPoint(player.x + player.frameWidth / 2, player.y + player.frameHeight / 2);
             if (0.5 * (enemy.frameWidth + player.frameWidth) < FlxU.getDistance(my, yours)) {
                 // FlxG.log("collide " + FlxU.getDistance(my, yours).toFixed(2));
                 return;
             }
+            */
             player.hurt(1);
-            enemy.solid = false;
+            tile.solid = false;
             if (1 <= player.health) {
                 return;
             }
@@ -287,7 +301,7 @@ package com.finegamedesign.lava
         {
             if (FlxG.mouse.justPressed()) {
                 titleText.text = "";
-                instructionText.text = "PRESS ARROW KEYS\nTO REACH PARTNER";
+                instructionText.text = moveString;
                 FlxG.play(Sounds.start);
             }
             mayMovePlayer();
