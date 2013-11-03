@@ -14,8 +14,8 @@ package com.finegamedesign.lava
                 ImgClass = PlayerImg;
             }
             super(X, Y, ImgClass);
-            width = 1.0 * frameWidth;
-            height = 1.0 * frameHeight;
+            width = 0.75 * frameWidth;
+            height = 0.75 * frameHeight;
             offset.x = 0.5 * (frameWidth - width);
             offset.y = 0.5 * (frameHeight - height);
             // loadGraphic(Img, true, false, 16, 16, true);

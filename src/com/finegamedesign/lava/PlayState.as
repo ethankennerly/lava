@@ -15,17 +15,20 @@ package com.finegamedesign.lava
         private static const PLAYER2:int = 4;
         private static const WIDTH:int = 16
         private static var first:Boolean = true;
-        [Embed(source="../../../../gfx/maze20x15.png")]
-        private static const Maze20x15:Class;
         [Embed(source="../../../../gfx/maze_move.png")]
         private static const MazeMove:Class;
         [Embed(source="../../../../gfx/maze_path.png")]
         private static const MazePath:Class;
         [Embed(source="../../../../gfx/maze_lava.png")]
         private static const MazeLava:Class;
+        [Embed(source="../../../../gfx/maze20x15_0.png")]
+        private static const Maze20x15_0:Class;
+        [Embed(source="../../../../gfx/maze20x15.png")]
+        private static const Maze20x15:Class;
         private static var maps:Array = [MazeMove, 
                                          MazePath,
                                          MazeLava,
+                                         Maze20x15_0,
                                          Maze20x15];
         [Embed(source="../../../../gfx/tiles.png")]
         private static const Tiles:Class;
@@ -106,6 +109,7 @@ package com.finegamedesign.lava
             map = new FlxTilemap();
             var image:Bitmap = Bitmap(new MapClass());
             map.loadMap(FlxTilemap.bitmapToCSV(image.bitmapData), Tiles);
+            center(map);
             var pixels:Vector.<uint> = image.bitmapData.getVector(image.bitmapData.rect);
             var palette:Bitmap = Bitmap(new Palette());
             var palettePixels:Vector.<uint> = palette.bitmapData.getVector(palette.bitmapData.rect);
@@ -116,23 +120,29 @@ package com.finegamedesign.lava
                 else if (palettePixels[PLAYER] == pixels[p]) {
                     // map.setTileByIndex(p, PLAYER);
                     player = new Player();
-                    placePlayer(player, p);
+                    placePlayer(player, map, p);
                 }
                 else if (palettePixels[PLAYER2] == pixels[p]) {
                     // map.setTileByIndex(p, PLAYER2);
                     player2 = new Player2();
-                    placePlayer(player2, p);
+                    placePlayer(player2, map, p);
                 }
             }
             add(map);
         }
 
-        private function placePlayer(player:Player, p:int):void
+        private function center(map:FlxTilemap):void
+        {
+            map.x = Math.round((FlxG.width - WIDTH * map.widthInTiles) / 2);
+            map.y = Math.round((FlxG.height - WIDTH * map.heightInTiles) / 2);
+        }
+
+        private function placePlayer(player:Player, map:FlxTilemap, p:int):void
         {
             player.y = WIDTH * int(p / map.widthInTiles)
-                + player.frameHeight / 2;
+                + player.frameHeight / 2 + map.y;
             player.x = WIDTH * (p % map.widthInTiles)
-                + player.frameWidth / 2;
+                + player.frameWidth / 2 + map.x;
         }
 
         private function expandLava():void
@@ -172,16 +182,16 @@ package com.finegamedesign.lava
             if (0 == FlxG.level) {
                 titleMessage = "LAVA  MAZE" 
                     + "\nFor  one or two players"
-                    + "\n\nOne-day game by Ethan Kennerly"
+                    + "\n\n\n\n\n\n\n\n\n\n\n\n\n\nOne-day game by Ethan Kennerly"
                     + "\nPlaytesting by Ian Hill"
                     + "\n\nFor The Arbitrary Game Jam #4  on November 2, 2013."
-                    + "\nTAG4 themes:  Lava & Love Hurts & Be a stranger to fear";
+                    + "\nTAG4 themes:  Lava & Love hurts & Be a stranger to fear";
             }
             else {
                 titleMessage = "";
 
             }
-            titleText = new FlxText(0, int(FlxG.height * 0.25), FlxG.width, titleMessage); 
+            titleText = new FlxText(0, int(FlxG.height * 0.135), FlxG.width, titleMessage); 
             titleText.color = textColor;
             titleText.size = 8;
             titleText.scrollFactor.x = 0.0;
@@ -274,8 +284,9 @@ package com.finegamedesign.lava
 
         private function collidePlayer(me:FlxObject, you:FlxObject):void
         {
-            FlxG.score += (FlxG.level + 1) * (6000 - Math.round(lifeTime) * 100);
+            FlxG.score += (FlxG.level + 1) * Math.max(1000, (6000 - Math.round(lifeTime) * 100));
             instructionText.text = "LET'S GET OUT OF HERE!";
+            FlxG.play(Sounds.pickup);
             FlxG.fade(0xFFFFFFFF, 4.0, win);
             // FlxG.music.fadeOut(4.0);
             state = "win";

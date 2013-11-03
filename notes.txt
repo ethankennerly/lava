@@ -1,7 +1,4 @@
 TODO
-	center
-	easy map
-	medium map
 	finegamedesign.com/lava
 	Ask Ian to play.
 	Ask Jen to play.
