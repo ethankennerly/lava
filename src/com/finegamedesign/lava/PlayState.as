@@ -9,11 +9,19 @@ package com.finegamedesign.lava
    
     public class PlayState extends FlxState
     {
+        private static const FLOOR:int = 0;
+        private static const WALL:int = 1;
+        private static const LAVA:int = 2;
+        private static const PLAYER:int = 3;
+        private static const PICKUP:int = 4;
+        private static const WIDTH:int = 16
         private static var first:Boolean = true;
         [Embed(source="../../../../gfx/maze20x15.png")]
         private static const Map:Class;
         [Embed(source="../../../../gfx/tiles.png")]
         private static const Tiles:Class;
+        [Embed(source="../../../../gfx/palette.png")]
+        private static const Palette:Class;
         private static var textColor:uint = 0xFFFFFF;
 
         private var state:String;
@@ -23,10 +31,10 @@ package com.finegamedesign.lava
         private var highScoreText:FlxText;
         private var player:Player;
         private var lifeTime:Number;
-        private var spawnTime:Number;
         private var enemies:FlxGroup;
-        private var cellWidth:int;
         private var map:FlxTilemap;
+        private var expandLavaElapsed:Number;
+        private var expandLavaTime:Number = 1.0;
 
         private function createScores():void
         {
@@ -52,12 +60,9 @@ package com.finegamedesign.lava
         {
             super.create();
             lifeTime = 0.0;
-            spawnTime = 0.0;
+            expandLavaElapsed = 0.0;
             createScores();
             loadMap();
-            player = new Player(FlxG.width / 2, FlxG.height / 2);
-            player.y -= player.frameHeight / 2;
-            player.x -= player.frameWidth / 2;
             add(player);
             enemies = new FlxGroup();
             add(enemies);
@@ -84,30 +89,62 @@ package com.finegamedesign.lava
             var image:Bitmap = Bitmap(new Map());
             map.loadMap(FlxTilemap.bitmapToCSV(image.bitmapData), Tiles);
             var pixels:Vector.<uint> = image.bitmapData.getVector(image.bitmapData.rect);
-            const LAVA:int = 2;
-            const PLAYER:int = 3;
-            const PICKUP:int = 4;
-            const WIDTH:int = 16
-            var tiles:Bitmap = Bitmap(new Tiles());
-            var tilePixels:Vector.<uint> = tiles.bitmapData.getVector(tiles.bitmapData.rect);
-            for (var p:int = pixels.length - 1; 0 < p; p--) {
-                if (tilePixels[LAVA * WIDTH] == pixels[p]) {
+            var palette:Bitmap = Bitmap(new Palette());
+            var palettePixels:Vector.<uint> = palette.bitmapData.getVector(palette.bitmapData.rect);
+            for (var p:int = pixels.length - 1; 0 <= p; p--) {
+                if (palettePixels[LAVA] == pixels[p]) {
                     map.setTileByIndex(p, LAVA);
                 }
-                else if (tilePixels[PLAYER * WIDTH] == pixels[p]) {
+                else if (palettePixels[PLAYER] == pixels[p]) {
                     map.setTileByIndex(p, PLAYER);
+                    player = new Player(
+                        WIDTH * int(p / map.widthInTiles), 
+                        WIDTH * (p % map.widthInTiles));
+                    player.y += player.frameHeight / 2;
+                    player.x += player.frameWidth / 2;
                 }
-                else if (tilePixels[PICKUP * WIDTH] == pixels[p]) {
+                else if (palettePixels[PICKUP] == pixels[p]) {
                     map.setTileByIndex(p, PICKUP);
                 }
             }
             add(map);
         }
 
+        private function expandLava():void
+        {
+            var neighbors:Array = [];
+            var neighbor:int;
+            var widthInTiles:int = map.widthInTiles;
+            var totalTiles:int = map.totalTiles;
+            for (var i:int = 0; i < totalTiles; i++) {
+                if (LAVA == map.getTileByIndex(i)) {
+                    neighbor = i - widthInTiles;
+                    if (0 <= neighbor && FLOOR == map.getTileByIndex(neighbor) && neighbors.indexOf(neighbor) <= -1) {
+                        neighbors.push(neighbor);
+                    }
+                    neighbor = i - 1;
+                    if (0 <= neighbor && (neighbor % widthInTiles) <= (widthInTiles - 2) && FLOOR == map.getTileByIndex(neighbor) && neighbors.indexOf(neighbor) <= -1) {
+                        neighbors.push(neighbor);
+                    }
+                    neighbor = i + 1;
+                    if (neighbor < totalTiles && 1 <= (neighbor % widthInTiles) && FLOOR == map.getTileByIndex(neighbor) && neighbors.indexOf(neighbor) <= -1) {
+                        neighbors.push(neighbor);
+                    }
+                    neighbor = i + widthInTiles;
+                    if (neighbor < totalTiles && FLOOR == map.getTileByIndex(neighbor) && neighbors.indexOf(neighbor) <= -1) {
+                        neighbors.push(neighbor);
+                    }
+                }
+            }
+            for (i = neighbors.length - 1; 0 <= i; i--) {
+                map.setTileByIndex(neighbors[i], LAVA);
+            }
+        }
+
         private function addHud():void
         {
             titleText = new FlxText(0, int(FlxG.height * 0.25), FlxG.width, 
-                "LAVA TUBES" 
+                "LAVA MAZE" 
                 + "\nGame  by Ethan Kennerly\nPlaytesting by Ian Hill");
             titleText.color = textColor;
             titleText.size = 8;
@@ -146,6 +183,11 @@ package com.finegamedesign.lava
                 state = "pickup";
                 instructionText.text = "PRESS ARROW KEYS\nTO RESCUE PRINCESS";
                 titleText.text = "";
+            }
+            expandLavaElapsed += FlxG.elapsed;
+            if (expandLavaTime <= expandLavaElapsed) {
+                expandLava();
+                expandLavaElapsed -= expandLavaTime;
             }
             if ("play" == state) {
                 FlxG.collide(player, map);
