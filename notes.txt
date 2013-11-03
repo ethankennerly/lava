@@ -1,10 +1,14 @@
 TODO
-	finegamedesign.com/lava
 	Ask Ian to play.
-	Ask Jen to play.
-	Hear
 	Lava explodes player.
 	See walk in 4 directions.
+	40 by 30 maze.  Zoom x1.
+	Tweet @VegetableBread #TAGJam4 finegamedesign.com/lava 
+	Upload to Kongregate
+	See tunnel texture.
+	Edge tunnel and lava.
+	3 lives, then restart.
+	See lava flow slowly.
 
 JOURNAL
 
@@ -20,3 +24,9 @@ Navigate the maze by arrow keys.
 http://en.wikipedia.org/wiki/Lava_tube
 
 http://en.wikipedia.org/wiki/Lava_cave
+
+http://coreybechelli.wordpress.com/tag/maze/
+
+http://www.astrolog.org/labyrnth/algrithm.htm
+
+http://www.dollins.org/mazes/

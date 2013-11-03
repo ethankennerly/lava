@@ -1,6 +1,8 @@
 package com.finegamedesign.lava
 {
     import flash.display.Bitmap;
+    import flash.display.BitmapData;
+    import flash.geom.Matrix;
 
     import org.flixel.*;
     import org.flixel.plugin.photonstorm.API.FlxKongregate;
@@ -23,12 +25,15 @@ package com.finegamedesign.lava
         private static const MazeLava:Class;
         [Embed(source="../../../../gfx/maze20x15_0.png")]
         private static const Maze20x15_0:Class;
+        [Embed(source="../../../../gfx/maze20x15_1.png")]
+        private static const Maze20x15_1:Class;
         [Embed(source="../../../../gfx/maze20x15.png")]
         private static const Maze20x15:Class;
         private static var maps:Array = [MazeMove, 
                                          MazePath,
                                          MazeLava,
                                          Maze20x15_0,
+                                         Maze20x15_1,
                                          Maze20x15];
         [Embed(source="../../../../gfx/tiles.png")]
         private static const Tiles:Class;
@@ -108,8 +113,11 @@ package com.finegamedesign.lava
         {
             map = new FlxTilemap();
             var image:Bitmap = Bitmap(new MapClass());
-            map.loadMap(FlxTilemap.bitmapToCSV(image.bitmapData), Tiles);
+            randomlyFlip(image.bitmapData);
+            map.loadMap(FlxTilemap.bitmapToCSV(image.bitmapData), Tiles,
+                WIDTH, WIDTH, FlxTilemap.OFF, 0, 0, 1);
             center(map);
+            FlxG.camera.zoom = map.widthInTiles <= 20 ? 2 : 1;
             var pixels:Vector.<uint> = image.bitmapData.getVector(image.bitmapData.rect);
             var palette:Bitmap = Bitmap(new Palette());
             var palettePixels:Vector.<uint> = palette.bitmapData.getVector(palette.bitmapData.rect);
@@ -129,6 +137,30 @@ package com.finegamedesign.lava
                 }
             }
             add(map);
+        }
+
+        private function randomlyFlip(bitmapData:BitmapData):void
+        {
+            FlxG.random() < 0.5 ? flipBitmapData(bitmapData, "x") : null;
+            FlxG.random() < 0.5 ? flipBitmapData(bitmapData, "y") : null;
+            FlxG.random() < 0.5 ? flipBitmapData(bitmapData, "180") : null;
+        }
+
+        // Copied from http://stackoverflow.com/questions/7773488/flipping-a-bitmap-horizontally
+        private function flipBitmapData(original:BitmapData, axis:String = "x"):void
+        {
+             var flipped:BitmapData = new BitmapData(original.width, original.height, true, 0);
+             var matrix:Matrix
+             if(axis == "x"){
+                  matrix = new Matrix( -1, 0, 0, 1, original.width, 0);
+             } else if (axis == "y") {
+                  matrix = new Matrix( 1, 0, 0, -1, 0, original.height);
+             }
+             else if (axis == "180") {
+                  matrix = new Matrix( -1, 0, 0, -1, 0, original.height);
+             }
+             flipped.draw(original, matrix, null, null, null, true);
+             original.draw(flipped);
         }
 
         private function center(map:FlxTilemap):void
@@ -183,7 +215,7 @@ package com.finegamedesign.lava
                 titleMessage = "LAVA  MAZE" 
                     + "\nFor  one or two players"
                     + "\n\n\n\n\n\n\n\n\n\n\n\n\n\nOne-day game by Ethan Kennerly"
-                    + "\nPlaytesting by Ian Hill"
+                    + "\n" // + "Playtesting by Ian Hill"
                     + "\n\nFor The Arbitrary Game Jam #4  on November 2, 2013."
                     + "\nTAG4 themes:  Lava & Love hurts & Be a stranger to fear";
             }
