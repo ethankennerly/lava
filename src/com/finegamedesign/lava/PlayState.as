@@ -16,13 +16,27 @@ package com.finegamedesign.lava
         private static const WIDTH:int = 16
         private static var first:Boolean = true;
         [Embed(source="../../../../gfx/maze20x15.png")]
-        private static const Map:Class;
+        private static const Maze20x15:Class;
+        [Embed(source="../../../../gfx/maze_move.png")]
+        private static const MazeMove:Class;
+        [Embed(source="../../../../gfx/maze_path.png")]
+        private static const MazePath:Class;
+        [Embed(source="../../../../gfx/maze_lava.png")]
+        private static const MazeLava:Class;
+        private static var maps:Array = [MazeMove, 
+                                         MazePath,
+                                         MazeLava,
+                                         Maze20x15];
         [Embed(source="../../../../gfx/tiles.png")]
         private static const Tiles:Class;
         [Embed(source="../../../../gfx/palette.png")]
         private static const Palette:Class;
         private static var textColor:uint = 0xFFFFFF;
-        private static var moveString:String = "PRESS ARROW KEYS OR WASD\nTO REACH PARTNER";
+        private static var messages:Array = [
+            "PRESS ARROW KEYS OR WASD\nTO REACH  YOUR PARTNER",
+            "PRESS ARROW KEYS OR WASD\nTO MOVE AROUND WALLS",
+            "REACH  YOUR PARTNER!\nAVOID RED LAVA!",
+            "QUICKLY REACH YOUR PARTNER!\nAVOID RED LAVA!" ];
 
         private var state:String;
         private var instructionText:FlxText;
@@ -63,7 +77,11 @@ package com.finegamedesign.lava
             lifeTime = 0.0;
             expandLavaElapsed = 0.0;
             createScores();
-            loadMap();
+            FlxG.levels = maps;
+            if (isNaN(FlxG.level) || FlxG.level <= 0) {
+                FlxG.level = 0;
+            }
+            loadMap(FlxG.levels[FlxG.level]);
             add(player2);
             add(player);
             enemies = new FlxGroup();
@@ -85,10 +103,10 @@ package com.finegamedesign.lava
             FlxKongregate.connect();
         }
 
-        private function loadMap():void
+        private function loadMap(MapClass:Class):void
         {
             map = new FlxTilemap();
-            var image:Bitmap = Bitmap(new Map());
+            var image:Bitmap = Bitmap(new MapClass());
             map.loadMap(FlxTilemap.bitmapToCSV(image.bitmapData), Tiles);
             var pixels:Vector.<uint> = image.bitmapData.getVector(image.bitmapData.rect);
             var palette:Bitmap = Bitmap(new Palette());
@@ -152,19 +170,34 @@ package com.finegamedesign.lava
 
         private function addHud():void
         {
-            titleText = new FlxText(0, int(FlxG.height * 0.25), FlxG.width, 
-                "LAVA MAZE" 
-                + "\nGame  by Ethan Kennerly"
-                + "\nPlaytesting by Ian Hill");
+            var titleMessage:String;
+            if (0 == FlxG.level) {
+                titleMessage = "LAVA  MAZE" 
+                    + "\nFor  one or two players"
+                    + "\n\nOne-day game by Ethan Kennerly"
+                    + "\nPlaytesting by Ian Hill"
+                    + "\n\nFor The Arbitrary Game Jam #4  on November 2, 2013."
+                    + "\nTAG4 themes:  Lava & Love Hurts & Be a stranger to fear";
+            }
+            else {
+                titleMessage = "";
+
+            }
+            titleText = new FlxText(0, int(FlxG.height * 0.25), FlxG.width, titleMessage); 
             titleText.color = textColor;
             titleText.size = 8;
             titleText.scrollFactor.x = 0.0;
             titleText.scrollFactor.y = 0.0;
             titleText.alignment = "center";
             add(titleText);
-            instructionText = new FlxText(0, 0, FlxG.width, 
-                first ? "CLICK HERE"
-                      : moveString);
+            var instructionMessage:String;
+            if (first) {
+                instructionMessage = "CLICK HERE";
+            }
+            else {
+                instructionMessage = nextInstruction();
+            }
+            instructionText = new FlxText(0, 0, FlxG.width, instructionMessage);
             instructionText.color = textColor;
             instructionText.scrollFactor.x = 0.0;
             instructionText.scrollFactor.y = 0.0;
@@ -183,23 +216,25 @@ package com.finegamedesign.lava
             add(highScoreText);
         }
 
-        override public function update():void 
+        private function nextInstruction():String
         {
-            if ("lose" != state && "win" != state) {
-                updateInput();
+            if (FlxG.level < messages.length) {
+                return messages[FlxG.level];
             }
             else {
-                player.velocity.x = 0.0;
-                player.velocity.x = 0.0;
-                player2.velocity.y = 0.0;
-                player2.velocity.y = 0.0;
+                return "";
             }
+        }
+
+        override public function update():void 
+        {
+            updateInput();
             if ("start" == state 
                     && ((player.velocity.x != 0.0 || player.velocity.y != 0.0)
                     || (player2.velocity.x != 0.0 || player2.velocity.y != 0.0)))
             {
                 state = "play";
-                instructionText.text = moveString;
+                instructionText.text = nextInstruction();
                 titleText.text = "";
             }
             expandLavaElapsed += FlxG.elapsed;
@@ -263,7 +298,6 @@ package com.finegamedesign.lava
             }
             */
             player.hurt(1);
-            tile.solid = false;
             if (1 <= player.health) {
                 return;
             }
@@ -289,6 +323,10 @@ package com.finegamedesign.lava
         private function win():void
         {
             // FlxG.playMusic(Sounds.music, 0.0);
+            FlxG.level++;
+            if (FlxG.levels.length <= FlxG.level) {
+                FlxG.level = 0;
+            }
             FlxG.resetState();
         }
 
@@ -301,7 +339,7 @@ package com.finegamedesign.lava
         {
             if (FlxG.mouse.justPressed()) {
                 titleText.text = "";
-                instructionText.text = moveString;
+                instructionText.text = nextInstruction();
                 FlxG.play(Sounds.start);
             }
             mayMovePlayer();
@@ -313,6 +351,9 @@ package com.finegamedesign.lava
         {
             player.velocity.x = 0;
             player.velocity.y = 0;
+            if ("lose" == state || "win" == state) {
+                return;
+            }
             if (FlxG.keys.pressed("A")) {
                 player.velocity.x -= player.speed;
             }
@@ -333,6 +374,9 @@ package com.finegamedesign.lava
         {
             player2.velocity.x = 0;
             player2.velocity.y = 0;
+            if ("lose" == state || "win" == state) {
+                return;
+            }
             if (FlxG.keys.pressed("LEFT")) {
                 player2.velocity.x -= player2.speed;
             }

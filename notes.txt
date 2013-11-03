@@ -1,5 +1,4 @@
 TODO
-	If any player collides with lava, lose.
 	tutor move.
 	tutor lava.
 	easy map
